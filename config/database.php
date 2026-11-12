@@ -11,7 +11,7 @@
     $local_dbname = "combox";
     $local_password = "IMMI3";
 
-    $local_conn = pg_connect("
+    $conn = pg_connect("
         host=$local_host
         port=$local_port
         dbname=$local_dbname
@@ -37,7 +37,7 @@
 
     // VERIFICAR CONEXIONES
 
-    if (!$local_conn) {
+    if (!$conn) {
         die("Local database connection failed");
     } else {
         echo "Local Connected success<br>";
