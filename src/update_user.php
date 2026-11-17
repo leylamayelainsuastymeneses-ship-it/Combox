@@ -1,19 +1,18 @@
 <?php
 include __DIR__ . '/../config/database.php';
 
-
-
-// Datos que llegan del formulario
+// Recibir los datos del formulario
 $id           = $_POST['id'];
 $firstname    = $_POST['firstname'];
 $lastname     = $_POST['lastname'];
 $email        = $_POST['email'];
 $mobile_phone = $_POST['mobile_phone'];
 
-// ---------- PARTE A: actualizar los datos ----------
+// ---------- PARTE 1: Actualizar los datos del usuario ----------
 $sql = 'UPDATE users
-        SET firstname = $1, lastname = $2, email = $3, mobile_phone = $4
-        WHERE id = $5';
+SET firstname = $1, lastname = $2, email = $3, mobile_phone = $4
+WHERE id = $5';
+
 $result = pg_query_params($conn, $sql, array($firstname, $lastname, $email, $mobile_phone, $id));
 
 if (!$result) {
@@ -21,39 +20,25 @@ if (!$result) {
     exit;
 }
 
-// ---------- PARTE B: la foto (solo si eligieron una) ----------
-if ($_FILES['photo']['name'] != "") {
-
-    // extensión del archivo en minúsculas: jpg, jpeg o png
+// ---------- PARTE 2: Subir foto SOLO si se eligió una ----------
+if (!empty($_FILES['photo']['name'])) {
     $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
-
-    if ($ext == "jpg" || $ext == "jpeg" || $ext == "png") {
-
-        // nombre de la foto = número de celular + extensión
-        $photo_url = "photos/" . $mobile_phone . "." . $ext;
-
+    
+    if ($ext == 'jpg' || $ext == 'jpeg' || $ext == 'png') {
+        $photo_filename = $mobile_phone . "." . $ext;
+        $photo_url = "photos/" . $photo_filename;
         $full_path = __DIR__ . "/" . $photo_url;
-
-        // mover la foto de la carpeta temporal a src/photos
+        
         if (move_uploaded_file($_FILES['photo']['tmp_name'], $full_path)) {
- {
-
-            // guardar la ruta en la base de datos
-            $sql = 'UPDATE users SET photo_url = $1 WHERE id = $2';
-            pg_query_params($conn, $sql, array($photo_url, $id));
-
-        } else {
-            echo "No se pudo guardar la foto. Revisa la carpeta photos.";
-            exit;
+            // Actualizar la ruta de la foto en la base de datos
+            $sql_foto = "UPDATE users SET photo_url = $1 WHERE id = $2";
+            pg_query_params($conn, $sql_foto, array($photo_url, $id));
         }
-
-    } else {
-        echo "Solo se permiten fotos JPG o PNG. <a href='edit_user.php?id=$id'>Volver</a>";
-        exit;
     }
 }
+// Si no se eligió foto, no hace nada → se mantiene la anterior ✅
 
-// ---------- PARTE C: volver a la lista ----------
-header("Location: list_users.php");
+// Redirigir a la lista de usuarios
+header("Location: listusers.php");
 exit;
 ?>
